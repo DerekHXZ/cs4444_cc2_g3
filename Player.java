@@ -45,7 +45,24 @@ public class Player implements cc2.sim.Player {
 		return new Shape(cutter);
 	}
 
-	private Move real_cut(Dough dough, Shape[] shapes, Shape[] opponent_shapes) {
+    private int getMinWidth(Shape cutter) {
+	int minI = Integer.MAX_VALUE;
+	int minJ = Integer.MAX_VALUE;
+	int maxI = Integer.MIN_VALUE;
+	int maxJ = Integer.MIN_VALUE;
+	Iterator<Point> pointsInShape = cutter.iterator();
+	while (pointsInShape.hasNext()) {
+	    Point p = pointsInShape.next();
+	    minI = Math.min(minI, p.i);
+	    maxI = Math.max(maxI, p.i);
+	    minJ = Math.min(minJ, p.j);
+	    maxJ = Math.max(maxJ, p.j);
+	}
+	return Math.min( maxJ-minJ, maxI-minI)+1;
+    }
+
+    
+	public Move real_cut(Dough dough, Shape[] shapes, Shape[] opponent_shapes) {
 		// prune larger shapes if initial move
 		if (dough.uncut()) {
 			int min = Integer.MAX_VALUE;
