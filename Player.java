@@ -1,4 +1,4 @@
-package cc2.g0;
+package cc2.g3;
 
 import cc2.sim.Point;
 import cc2.sim.Shape;
@@ -12,6 +12,15 @@ public class Player implements cc2.sim.Player {
 	private boolean[] row_2 = new boolean [0];
 
 	private Random gen = new Random();
+
+	private static final int SIDE = 50;
+
+	private Dough opponent, self;
+
+	public Player() {
+		opponent = new Dough(SIDE);
+		self = new Dough(SIDE);
+	}
 
 	public Shape cutter(int length, Shape[] shapes, Shape[] opponent_shapes)
 	{
@@ -36,8 +45,7 @@ public class Player implements cc2.sim.Player {
 		return new Shape(cutter);
 	}
 
-	public Move cut(Dough dough, Shape[] shapes, Shape[] opponent_shapes)
-	{
+	public Move real_cut(Dough dough, Shape[] shapes, Shape[] opponent_shapes) {
 		// prune larger shapes if initial move
 		if (dough.uncut()) {
 			int min = Integer.MAX_VALUE;
@@ -64,6 +72,23 @@ public class Player implements cc2.sim.Player {
 				}
 			}
 		// return a cut randomly
+
 		return moves.get(gen.nextInt(moves.size()));
+	}
+
+	public Move cut(Dough dough, Shape[] shapes, Shape[] opponent_shapes)
+	{
+		// Get cut done by opponent
+		for (int i = 0; i < SIDE; i++) {
+			for (int j = 0; j < SIDE; j++) {
+				if (!dough.uncut(i, j) && opponent.uncut(i, j) && self.uncut(i, j)) {
+					opponent.cut(new Shape(new Point[] {new Point(0, 0)}), new Point(i, j));
+				}
+			}
+		}
+		Move move = real_cut(dough, shapes, opponent_shapes);
+		// Get cut done by ourselves
+		self.cut(shapes[move.shape].rotations()[move.rotation], move.point);
+		return move;
 	}
 }
