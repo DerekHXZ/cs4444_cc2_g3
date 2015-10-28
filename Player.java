@@ -9,11 +9,11 @@ import java.util.*;
 
 public class Player implements cc2.sim.Player {
 
+	private static final int SIDE = 50;
+
 	private boolean[] row_2 = new boolean [0];
 
 	private Random gen = new Random();
-
-	private static final int SIDE = 50;
 
 	private Dough opponent, self;
 
@@ -45,7 +45,7 @@ public class Player implements cc2.sim.Player {
 		return new Shape(cutter);
 	}
 
-	public Move real_cut(Dough dough, Shape[] shapes, Shape[] opponent_shapes) {
+	private Move real_cut(Dough dough, Shape[] shapes, Shape[] opponent_shapes) {
 		// prune larger shapes if initial move
 		if (dough.uncut()) {
 			int min = Integer.MAX_VALUE;
@@ -57,7 +57,7 @@ public class Player implements cc2.sim.Player {
 					shapes[s] = null;
 		}
 		// find all valid cuts
-		ArrayList <Move> moves = new ArrayList <Move> ();
+		ArrayList <ComparableMove> moves = new ArrayList <ComparableMove> ();
 		for (int i = 0 ; i != dough.side() ; ++i)
 			for (int j = 0 ; j != dough.side() ; ++j) {
 				Point p = new Point(i, j);
@@ -66,14 +66,17 @@ public class Player implements cc2.sim.Player {
 					Shape[] rotations = shapes[si].rotations();
 					for (int ri = 0 ; ri != rotations.length ; ++ri) {
 						Shape s = rotations[ri];
-						if (dough.cuts(s, p))
-							moves.add(new Move(si, ri, p));
+						if (dough.cuts(s, p)) {
+							long t = touched_edges(s, p, opponent);
+							moves.add(new ComparableMove(new Move(si, ri, p), t));
+						}
 					}
 				}
 			}
 		// return a cut randomly
-
-		return moves.get(gen.nextInt(moves.size()));
+		Collections.sort(moves);
+		System.out.println(moves.get(moves.size() - 1).key);
+		return moves.get(moves.size() - 1).move;
 	}
 
 	public Move cut(Dough dough, Shape[] shapes, Shape[] opponent_shapes)
@@ -90,5 +93,39 @@ public class Player implements cc2.sim.Player {
 		// Get cut done by ourselves
 		self.cut(shapes[move.shape].rotations()[move.rotation], move.point);
 		return move;
+	}
+
+	private long touched_edges(Shape s, Point p, Dough d) {
+		long sum = 0;
+		for (Point q : s) {
+			if (!d.uncut(p.i + q.i + 1, p.j + q.j)) sum += 1;
+			if (!d.uncut(p.i + q.i - 1, p.j + q.j)) sum += 1;
+			if (!d.uncut(p.i + q.i, p.j + q.j + 1)) sum += 1;
+			if (!d.uncut(p.i + q.i, p.j + q.j - 1)) sum += 1;
+		}
+		return sum;
+	}
+
+	private class ComparableMove implements Comparable<ComparableMove> {
+
+		public Move move;
+		public long key;
+		public int randomized;
+
+		public ComparableMove(Move move, long key) {
+			this.move = move;
+			this.key = key;
+			this.randomized = gen.nextInt();
+		}
+
+		@Override
+		public int compareTo(ComparableMove o) {
+			int c = Long.compare(this.key, o.key);
+			if (c != 0) {
+				return c;
+			} else {
+				return Integer.compare(this.randomized, o.randomized);
+			}
+		}
 	}
 }
