@@ -85,14 +85,14 @@ public class Player implements cc2.sim.Player {
 						Shape s = rotations[ri];
 						if (dough.cuts(s, p)) {
 							long t = touched_edges(s, p, opponent);
-							moves.add(new ComparableMove(new Move(si, ri, p), t));
+							moves.add(new ComparableMove(new Move(si, ri, p), t, s.size()));
 						}
 					}
 				}
 			}
 		// return a cut randomly
 		Collections.sort(moves);
-		System.out.println(moves.get(moves.size() - 1).key);
+		System.out.println(moves.get(moves.size() - 1).key1);
 		return moves.get(moves.size() - 1).move;
 	}
 
@@ -115,34 +115,44 @@ public class Player implements cc2.sim.Player {
 	private long touched_edges(Shape s, Point p, Dough d) {
 		long sum = 0;
 		for (Point q : s) {
-			if (!d.uncut(p.i + q.i + 1, p.j + q.j)) sum += 1;
-			if (!d.uncut(p.i + q.i - 1, p.j + q.j)) sum += 1;
-			if (!d.uncut(p.i + q.i, p.j + q.j + 1)) sum += 1;
-			if (!d.uncut(p.i + q.i, p.j + q.j - 1)) sum += 1;
+			if (cut(d, p.i + q.i + 1, p.j + q.j)) sum += 1;
+			if (cut(d, p.i + q.i - 1, p.j + q.j)) sum += 1;
+			if (cut(d, p.i + q.i, p.j + q.j + 1)) sum += 1;
+			if (cut(d, p.i + q.i, p.j + q.j - 1)) sum += 1;
 		}
 		return sum;
+	}
+
+	private boolean cut(Dough d, int i, int j) {
+		return // i >= 0 && i < d.side() &&
+				// j >= 0 && j < d.side() &&
+				!d.uncut(i, j);
 	}
 
 	private class ComparableMove implements Comparable<ComparableMove> {
 
 		public Move move;
-		public long key;
+		public long key1;
+		public long key2;
 		public int randomized;
 
-		public ComparableMove(Move move, long key) {
+		public ComparableMove(Move move, long key1, long key2) {
 			this.move = move;
-			this.key = key;
+			this.key1 = key1;
 			this.randomized = gen.nextInt();
 		}
 
 		@Override
 		public int compareTo(ComparableMove o) {
-			int c = Long.compare(this.key, o.key);
+			int c = Long.compare(this.key1, o.key1);
 			if (c != 0) {
 				return c;
-			} else {
-				return Integer.compare(this.randomized, o.randomized);
 			}
+			c = Long.compare(this.key2, o.key2);
+			if (c != 0) {
+				return c;
+			}
+			return Integer.compare(this.randomized, o.randomized);
 		}
 	}
 }
