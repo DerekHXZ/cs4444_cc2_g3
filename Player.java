@@ -80,7 +80,7 @@ public class Player implements cc2.sim.Player {
 		    }
 		}
 	    }
-	if (moves.size() > 1) {
+	if (moves.size() >= 1) {
 	    Collections.sort(moves);
 	    //System.out.println(moves.get(moves.size() - 1).key);
 	    return moves.get(moves.size() - 1).move;
