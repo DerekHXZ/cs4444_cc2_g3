@@ -103,68 +103,75 @@ public class Player implements cc2.sim.Player {
 		    shapes[s] = null;
 	}
 	int minWidth = getMinWidth(opponent_shapes[0]);	
-	Move A = find_cut(dough, createPaddedBoard(dough, minWidth, minWidth, true, true), shapes, opponent_shapes, 0);
-	//Move A = find_cut(dough, opponent, shapes, opponent_shapes, 0);
+	Move A = find_cut(dough, createPaddedBoard(dough, minWidth-1, minWidth-1, minWidth-1), shapes, opponent_shapes, 0); // pad all directions with minwidth
 	if (A != null) {
 	    System.out.println("Move A");
 	    return A;
 	}
 	else {
-	    Move B1 = find_cut(dough, createPaddedBoard(dough, minWidth / 2 + 1, minWidth, false, true), shapes, opponent_shapes, 0);
-	    Move B2 = find_cut(dough, createPaddedBoard(dough, minWidth / 2 + 1, minWidth, true, false), shapes, opponent_shapes, 0);
-	    if (B1 != null) {
-		System.out.println("Move B1");
-		return B1;
-	    }
-	    else if (B2 != null) {
-		System.out.println("Move B2");
-		return B2;
+	    Move B = find_cut(dough, createPaddedBoard(dough, minWidth / 2 - 1, minWidth / 2 - 1, minWidth), shapes, opponent_shapes, 0); // pad all directions with minwidth / 2
+	    if (B != null) {
+		System.out.println("Move B");
+		return B;
 	    }
 	    else {
-		System.out.println("Move C");
-		return find_cut(dough, opponent, shapes, opponent_shapes, 2);
+		Dough Board1 = createPaddedBoard(dough, minWidth / 2 - 1, 1, minWidth); // pad only one direction by minwidth / 2
+		Dough Board2 = createPaddedBoard(dough, 1, minWidth / 2 - 1, minWidth);
+		Move C1 = find_cut(dough, Board1, shapes, opponent_shapes, 0);
+		Move C2 = find_cut(dough, Board2, shapes, opponent_shapes, 0);
+		if (C1 == null ^ C2 == null) {
+		    if (C1 == null) {
+			System.out.println("Move C");
+			return C2;
+		    }
+		    else {
+			System.out.println("Move C");
+			return C1;
+		    }
+		}
+		else if (C1 != null && C2 != null) { // choose best direction
+		    System.out.println("Move C");
+		    if (touched_edges( shapes[C1.shape].rotations()[C1.rotation], C1.point, Board1) > touched_edges( shapes[C2.shape].rotations()[C2.rotation], C2.point, Board2) ) {
+			return C1;
+		    }
+		    else {
+			return C2;
+		    }
+		}
+		else { // default to behavior of last submission
+		    System.out.println("Move F");
+		    return find_cut(dough, opponent, shapes, opponent_shapes, 2);
+		}
 	    }
 	}
     }
 
-    private Dough createPaddedBoard(Dough dough, int width, int minWidth, boolean vertical, boolean horizontal) {
+    private Dough createPaddedBoard(Dough dough, int verticalPadding, int horizontalPadding, int borderPadding) {
 	Dough padded = new Dough(SIDE);
 	for (int i=0; i<SIDE; i++) {
 	    for (int j=0; j<SIDE; j++) {
 		if (!dough.uncut(i,j)) {
-		    cutPadding(padded, i,j,width,vertical, horizontal);
+		    cutPadding(padded, i,j,verticalPadding, horizontalPadding);
 		}
 	    }
 	}
-	cutBorder(padded, minWidth);
+	cutBorder(padded, borderPadding);
 	return padded;
     }
-
-    private void cutPadding(Dough padded, int i, int j, int minWidth, boolean vertical, boolean horizontal) {
-	int x,y;
-	if (!horizontal) {
-	    x = i;
-	}
-	else {
-	    for (x = Math.max(0,i-minWidth+1); x<Math.min(SIDE-1,i+minWidth-1); x++) {
-		if (!vertical) {
-		    y = j;
-		    padded.cut(new Shape(new Point[] {new Point(0,0)}), new Point(x,y));
-		}
-		else {
-		    for (y=Math.max(0,j-minWidth+1); y<Math.min(SIDE-1,j+minWidth-1); y++) {
-			padded.cut(new Shape(new Point[] {new Point(0, 0)}), new Point(x, y));
-		    }
-		}
+    
+    private void cutPadding(Dough padded, int i, int j, int verticalPadding, int horizontalPadding) {
+	for (int x = Math.max(0,i-horizontalPadding); x<Math.min(SIDE-1,i+horizontalPadding); x++) {
+	    for (int y=Math.max(0,j-verticalPadding); y<Math.min(SIDE-1,j+verticalPadding); y++) {
+		padded.cut(new Shape(new Point[] {new Point(0, 0)}), new Point(x, y));
 	    }
 	}
     }
 
-    private void cutBorder(Dough padded, int minWidth) {
-	for (int i=0; i<SIDE; i++) {cutPadding(padded, i,0,minWidth,true,true);}
-	for (int i=0; i<SIDE; i++) {cutPadding(padded, i,SIDE-1,minWidth,true,true);}
-	for (int j=0; j<SIDE; j++) {cutPadding(padded, 0,j,minWidth,true,true);}
-	for (int j=0; j<SIDE; j++) {cutPadding(padded, SIDE-1,j,minWidth,true,true);}
+    private void cutBorder(Dough padded, int w) {
+	for (int i=0; i<SIDE; i++) {cutPadding(padded, i,0,w,w);}
+	for (int i=0; i<SIDE; i++) {cutPadding(padded, i,SIDE-1,w,w);}
+	for (int j=0; j<SIDE; j++) {cutPadding(padded, 0,j,w,w);}
+	for (int j=0; j<SIDE; j++) {cutPadding(padded, SIDE-1,j,w,w);}
     }
 
     // function called by simulator
@@ -184,7 +191,7 @@ public class Player implements cc2.sim.Player {
 	    self.cut(shapes[move.shape].rotations()[move.rotation], move.point);
 	return move;
     }
-
+    
     private long touched_edges(Shape s, Point p, Dough d) {
 	long sum = 0;
 	for (Point q : s) {
