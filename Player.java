@@ -26,7 +26,7 @@ public class Player implements cc2.sim.Player {
 
     public Shape cutter(int length, Shape[] shapes, Shape[] opponent_shapes)
     {
-		if(canPredictOpponent)
+		if(opponent_shapes != null)
 		{
 			Point[] cutter = new Point [length];
 			int width = getMinWidth(opponent_shapes[0]);
@@ -45,10 +45,11 @@ public class Player implements cc2.sim.Player {
 			
 			//Choose the shape that fits to deny the opponent that shape
 			return new Shape(cutter);
+
 		}
 		else
 		{
-			default_cuttter(length, shapes, opponent_shapes);
+			return default_cuttter(length, shapes, opponent_shapes);
 		}
     }
     
