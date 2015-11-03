@@ -26,25 +26,53 @@ public class Player implements cc2.sim.Player {
 
     public Shape cutter(int length, Shape[] shapes, Shape[] opponent_shapes)
     {
-	// check if first try of given cutter length
-	Point[] cutter = new Point [length];
-	if (row_2.length != cutter.length - 1) {
-	    // save cutter length to check for retries
-	    row_2 = new boolean [cutter.length - 1];
-	    for (int i = 0 ; i != cutter.length ; ++i)
-		cutter[i] = new Point(i, 0);
-	} else {
-	    // pick a random cell from 2nd row but not same
-	    int i;
-	    do {
-		i = gen.nextInt(cutter.length - 1);
-	    } while (row_2[i]);
-	    row_2[i] = true;
-	    cutter[cutter.length - 1] = new Point(i, 1);
-	    for (i = 0 ; i != cutter.length - 1 ; ++i)
-		cutter[i] = new Point(i, 0);
-	}
-	return new Shape(cutter);
+		if(canPredictOpponent)
+		{
+			Point[] cutter = new Point [length];
+			int width = getMinWidth(opponent_shapes[0]);
+			int height= getMinHeight(opponent_shapes[0]);
+			ourDough cutter_dough = new ourDough(height, width);
+			//cut the cutter with our shape
+			cutter_dough.cut(opponent_shapes[0], new Point(0,0));
+			for(int i =0; i<cutter_dough.dough.length; i++)
+				{
+					for(int j=0; j<cutter_dough.dough[0].length; j++)
+					{
+						//perform BFS to look for possible shapes
+					}
+				}
+					
+			
+			//Choose the shape that fits to deny the opponent that shape
+			return new Shape(cutter);
+		}
+		else
+		{
+			default_cuttter(length, shapes, opponent_shapes);
+		}
+    }
+    
+    public Shape default_cuttter(int length, Shape[] shapes, Shape[] opponent_shapes)
+    {
+		// check if first try of given cutter length
+		Point[] cutter = new Point [length];
+		if (row_2.length != cutter.length - 1) {
+		    // save cutter length to check for retries
+		    row_2 = new boolean [cutter.length - 1];
+		    for (int i = 0 ; i != cutter.length ; ++i)
+			cutter[i] = new Point(i, 0);
+		} else {
+		    // pick a random cell from 2nd row but not same
+		    int i;
+		    do {
+			i = gen.nextInt(cutter.length - 1);
+		    } while (row_2[i]);
+		    row_2[i] = true;
+		    cutter[cutter.length - 1] = new Point(i, 1);
+		    for (i = 0 ; i != cutter.length - 1 ; ++i)
+			cutter[i] = new Point(i, 0);
+		}
+		return new Shape(cutter);
     }
 
     private int getMinWidth(Shape cutter) {
@@ -60,8 +88,24 @@ public class Player implements cc2.sim.Player {
 	    minJ = Math.min(minJ, p.j);
 	    maxJ = Math.max(maxJ, p.j);
 	}
-	return Math.min( maxJ-minJ, maxI-minI)+1;
+	return Math.max( maxJ-minJ, maxI-minI)+1;
     }
+    
+    private int getMinHeight(Shape cutter) {
+    	int minI = Integer.MAX_VALUE;
+    	int minJ = Integer.MAX_VALUE;
+    	int maxI = Integer.MIN_VALUE;
+    	int maxJ = Integer.MIN_VALUE;
+    	Iterator<Point> pointsInShape = cutter.iterator();
+    	while (pointsInShape.hasNext()) {
+    	    Point p = pointsInShape.next();
+    	    minI = Math.min(minI, p.i);
+    	    maxI = Math.max(maxI, p.i);
+    	    minJ = Math.min(minJ, p.j);
+    	    maxJ = Math.max(maxJ, p.j);
+    	}
+    	return Math.min( maxJ-minJ, maxI-minI)+1;
+        }
 
     // function that will be called multiple times in real_cut with different parameters. set searchDough to opponent for behavior from last submission
     public Move find_cut(Dough dough, Dough searchDough, Shape[] shapes, Shape[] opponent_shapes, int maxCutterIndex) { 
