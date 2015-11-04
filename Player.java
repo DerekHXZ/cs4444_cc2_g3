@@ -34,14 +34,21 @@ public class Player implements cc2.sim.Player {
 			ourDough cutter_dough = new ourDough(height, width);
 			//cut the cutter with our shape
 			cutter_dough.cut(opponent_shapes[0], new Point(0,0));
+			HashSet<Pair> h = new HashSet<Pair>();
 			for(int i =0; i<cutter_dough.dough.length; i++)
 				{
 					for(int j=0; j<cutter_dough.dough[0].length; j++)
 					{
-						//perform BFS to look for possible shapes
+						if(cutter_dough.dough[i][j]== false)
+						{
+							h.add(new Pair(i,j));
+						}
 					}
 				}
-					
+			for(Pair p: h)
+			{
+				//Check if it forms an acceptable shape
+			}
 			
 			//Choose the shape that fits to deny the opponent that shape
 			return new Shape(cutter);
