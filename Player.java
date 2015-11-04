@@ -4,6 +4,7 @@ import cc2.sim.Point;
 import cc2.sim.Shape;
 import cc2.sim.Dough;
 import cc2.sim.Move;
+import cc2.g3.rectDough;
 
 import java.util.*;
 
@@ -16,87 +17,94 @@ public class Player implements cc2.sim.Player {
     private Random gen = new Random();
 
     private Dough opponent, self;
-    //    private Dough padded;
+
+    private boolean denied;
 
     public Player() {
 	opponent = new Dough(SIDE);
 	self = new Dough(SIDE);
-	//	padded = new Dough(SIDE);
-    }
+	denied = false;
+    }    
 
     public Shape cutter(int length, Shape[] shapes, Shape[] opponent_shapes)
     {
-		if(opponent_shapes != null)
-		{
-			int width = getMinWidth(opponent_shapes[0]);
-			int height= getMinHeight(opponent_shapes[0]);
-			ourDough cutter_dough = new ourDough(height, width);
-			//cut the cutter with our shape
-			cutter_dough.cut(opponent_shapes[0], new Point(0,0));
-			HashSet<Point> h = new HashSet<Point>();
-			for(int i =0; i<cutter_dough.dough.length; i++)
-				{
-					for(int j=0; j<cutter_dough.dough[0].length; j++)
-					{
-						if(cutter_dough.dough[i][j]== false)
-						{
-							h.add(new Point(i,j));
-						}
-					}
-				}
-			
-			HashMap<Integer, Shape> possibilities = new HashMap<Integer, Shape>();
-			
-			//Take a subset of 5/7 points & check if the form an acceptable shape
-			
-			//Add the subset's points to subset_points
-			Set <Point> subset_points = new HashSet <Point>();
-			Point subset [] = new Point[subset_points.size()];
-			subset_points.toArray(subset);
-			//Create a shape with the points in the subset
-			Shape s = new Shape(subset);
-			//Check if shape is viable
-			int i =0;
-			if(Point.shape(subset))
-			{
-				//If shape is valid, add to possibilities
-				possibilities.put(i++, s);
-			}
-			//Choose the shape that fits to deny the opponent that shape
-			Shape cutter = possibilities.get(1);
-			return cutter;
+	if (opponent_shapes.length == 0 || denied == true) {return randLinearCutter(length, shapes, opponent_shapes);}
+	Point dimensions = getBoundingBox(opponent_shapes[0]);
+	rectDough space = new rectDough(dimensions);
+	space.cut(opponent_shapes[0], new Point(0,0));
+	Stack<Point> conn_comp = new Stack<Point>();
 
+	while (!space.saturated()) { 
+	    Point init = findAvailablePoint(space);
+	    conn_comp.push(init);
+	    ArrayList<Point> points = new ArrayList<Point>(); 
+	    points.add(init);
+	    space.cut(init);
+	    while (!conn_comp.isEmpty()) { 
+		Point next = conn_comp.pop();
+		Point[] neighbors = next.neighbors();
+		for (int i=0; i<neighbors.length; i++) {
+		    if (space.uncut(neighbors[i])) {
+			conn_comp.push(neighbors[i]);
+			space.cut(neighbors[i]);
+			points.add(neighbors[i]);
+		    }
 		}
-		else
-		{
-			return default_cuttter(length, shapes, opponent_shapes);
-		}
+	    }
+	    if (points.size() == length) { 
+		System.out.println("Denied!");
+		denied = true;
+		Point[] cutter = new Point[points.size()];
+		return new Shape(points.toArray(cutter));
+	    }
+	}
+	return randLinearCutter(length, shapes, opponent_shapes);
     }
-    
-	public Shape default_cuttter(int length, Shape[] shapes, Shape[] opponent_shapes)
-    {
-		// check if first try of given cutter length
-		Point[] cutter = new Point [length];
-		if (row_2.length != cutter.length - 1) {
-		    // save cutter length to check for retries
-		    row_2 = new boolean [cutter.length - 1];
-		    for (int i = 0 ; i != cutter.length ; ++i)
-			cutter[i] = new Point(i, 0);
-		} else {
-		    // pick a random cell from 2nd row but not same
-		    int i;
-		    do {
-			i = gen.nextInt(cutter.length - 1);
-		    } while (row_2[i]);
-		    row_2[i] = true;
-		    cutter[cutter.length - 1] = new Point(i, 1);
-		    for (i = 0 ; i != cutter.length - 1 ; ++i)
-			cutter[i] = new Point(i, 0);
-		}
-		return new Shape(cutter);
+
+    private Point findAvailablePoint(rectDough space) {
+	int h = space.height;
+	int w = space.width;
+	for (int i=0; i<h; i++) {
+	    for (int j=0; j<w; j++) {
+		if (space.uncut(i,j)) {return new Point(i,j);}
+	    }
+	}
+	System.out.println("No available points");
+	return null;
+    }
+
+    public Shape randLinearCutter(int length, Shape[] shapes, Shape[] opponent_shapes) {
+	// check if first try of given cutter length
+	Point[] cutter = new Point [length];
+	if (row_2.length != cutter.length - 1) {
+	    // save cutter length to check for retries
+	    row_2 = new boolean [cutter.length - 1];
+	    for (int i = 0 ; i != cutter.length ; ++i)
+		cutter[i] = new Point(i, 0);
+	} else {
+	    // pick a random cell from 2nd row but not same
+	    int i;
+	    int n = cutter.length-1;
+	    do {
+		i = gen.nextInt(n*10000); //bias towards endpoints
+		if (i < 4999*n) {i = 0;}
+		else if (i >= 5000*n) {i = n-1;}
+		else {i = i - 4999*n;}
+	    } while (row_2[i]);
+	    row_2[i] = true;
+	    cutter[cutter.length - 1] = new Point(i, 1);
+	    for (i = 0 ; i != cutter.length - 1 ; ++i)
+		cutter[i] = new Point(i, 0);
+	}
+	return new Shape(cutter);
     }
 
     private int getMinWidth(Shape cutter) {
+	Point b = getBoundingBox(cutter);
+	return Math.min( b.i,b.j );
+    }
+
+    private Point getBoundingBox(Shape cutter) {
 	int minI = Integer.MAX_VALUE;
 	int minJ = Integer.MAX_VALUE;
 	int maxI = Integer.MIN_VALUE;
@@ -109,24 +117,8 @@ public class Player implements cc2.sim.Player {
 	    minJ = Math.min(minJ, p.j);
 	    maxJ = Math.max(maxJ, p.j);
 	}
-	return Math.max( maxJ-minJ, maxI-minI)+1;
+	return new Point(maxI - minI + 1, maxJ - minJ + 1);
     }
-    
-    private int getMinHeight(Shape cutter) {
-    	int minI = Integer.MAX_VALUE;
-    	int minJ = Integer.MAX_VALUE;
-    	int maxI = Integer.MIN_VALUE;
-    	int maxJ = Integer.MIN_VALUE;
-    	Iterator<Point> pointsInShape = cutter.iterator();
-    	while (pointsInShape.hasNext()) {
-    	    Point p = pointsInShape.next();
-    	    minI = Math.min(minI, p.i);
-    	    maxI = Math.max(maxI, p.i);
-    	    minJ = Math.min(minJ, p.j);
-    	    maxJ = Math.max(maxJ, p.j);
-    	}
-    	return Math.min( maxJ-minJ, maxI-minI)+1;
-        }
 
     // function that will be called multiple times in real_cut with different parameters. set searchDough to opponent for behavior from last submission
     public Move find_cut(Dough dough, Dough searchDough, Shape[] shapes, Shape[] opponent_shapes, int maxCutterIndex) { 
@@ -220,13 +212,13 @@ public class Player implements cc2.sim.Player {
 		}
 	    }
 	}
-	cutBorder(padded, borderPadding);
+	cutBorder(padded, borderPadding-1);
 	return padded;
     }
     
     private void cutPadding(Dough padded, int i, int j, int verticalPadding, int horizontalPadding) {
-	for (int x = Math.max(0,i-horizontalPadding); x<Math.min(SIDE-1,i+horizontalPadding); x++) {
-	    for (int y=Math.max(0,j-verticalPadding); y<Math.min(SIDE-1,j+verticalPadding); y++) {
+	for (int x = Math.max(0,i-horizontalPadding); x<=Math.min(SIDE-1,i+horizontalPadding); x++) {
+	    for (int y=Math.max(0,j-verticalPadding); y<=Math.min(SIDE-1,j+verticalPadding); y++) {
 		padded.cut(new Shape(new Point[] {new Point(0, 0)}), new Point(x, y));
 	    }
 	}
