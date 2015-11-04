@@ -34,19 +34,23 @@ public class Player implements cc2.sim.Player {
 			ourDough cutter_dough = new ourDough(height, width);
 			//cut the cutter with our shape
 			cutter_dough.cut(opponent_shapes[0], new Point(0,0));
-			HashSet<Pair> h = new HashSet<Pair>();
+			HashSet<Point> h = new HashSet<Point>();
 			for(int i =0; i<cutter_dough.dough.length; i++)
 				{
 					for(int j=0; j<cutter_dough.dough[0].length; j++)
 					{
 						if(cutter_dough.dough[i][j]== false)
 						{
-							h.add(new Pair(i,j));
+							h.add(new Point(i,j));
 						}
 					}
 				}
-			for(Pair p: h)
+			for(Point p: h)
 			{
+				//Take a subset of 5/7 points & check if the form an acceptable shape
+				
+				//HashMap<Integer, Shape> possibilities = new HashMap<Integer, Shape>();
+				
 				//Check if it forms an acceptable shape
 			}
 			
