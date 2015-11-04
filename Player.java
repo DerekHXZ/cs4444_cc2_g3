@@ -28,7 +28,6 @@ public class Player implements cc2.sim.Player {
     {
 		if(opponent_shapes != null)
 		{
-			Point[] cutter = new Point [length];
 			int width = getMinWidth(opponent_shapes[0]);
 			int height= getMinHeight(opponent_shapes[0]);
 			ourDough cutter_dough = new ourDough(height, width);
@@ -46,23 +45,26 @@ public class Player implements cc2.sim.Player {
 					}
 				}
 			
-			HashMap<Integer, ourShape> possibilities = new HashMap<Integer, ourShape>();
+			HashMap<Integer, Shape> possibilities = new HashMap<Integer, Shape>();
 			
 			//Take a subset of 5/7 points & check if the form an acceptable shape
-			//Add the subset to subset_points
+			
+			//Add the subset's points to subset_points
 			Set <Point> subset_points = new HashSet <Point>();
+			Point subset [] = new Point[subset_points.size()];
+			subset_points.toArray(subset);
 			//Create a shape with the points in the subset
-			ourShape s = new ourShape(subset_points, null);
+			Shape s = new Shape(subset);
 			//Check if shape is viable
 			int i =0;
-			if(isViable(s))
+			if(Point.shape(subset))
 			{
 				//If shape is valid, add to possibilities
 				possibilities.put(i++, s);
-			}				
-			
+			}
 			//Choose the shape that fits to deny the opponent that shape
-			return new Shape(cutter);
+			Shape cutter = possibilities.get(1);
+			return cutter;
 
 		}
 		else
@@ -71,11 +73,6 @@ public class Player implements cc2.sim.Player {
 		}
     }
     
-    public boolean isViable(ourShape s) 
-    {
-		return false;
-	}
-
 	public Shape default_cuttter(int length, Shape[] shapes, Shape[] opponent_shapes)
     {
 		// check if first try of given cutter length
