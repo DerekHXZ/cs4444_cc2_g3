@@ -8,6 +8,7 @@ import cc2.g3.gameState;
 import cc2.g3.rectDough;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Player implements cc2.sim.Player {
 
@@ -101,15 +102,22 @@ public class Player implements cc2.sim.Player {
     }
 
     private int getScore(gameState state) {
-	return 0;
+		// Score is opponent moves - own moves
+		int val = find_all_cuts(state.board, state.shapes).size() -
+				find_all_cuts(state.board, state.opponent_shapes).size();
+		if (state.our_turn) {
+			return val;
+		} else {
+			return -val;
+		}
     }
-    
+
     private gameState minimax(gameState initial_state) {
 	int searchDepth = 8; //tbd
 	int bestScore = getScore(initial_state);
 	gameState bestStrategy = initial_state.copy();
 	Stack<gameState>  gameTree = new Stack<gameState>();
-	ArrayList<Move> moves = find_possible_moves(initial_state);
+	List<Move> moves = find_possible_moves(initial_state);
 	Iterator<Move> it = moves.iterator();
 	while (it.hasNext()) {
 	    gameState next_state = initial_state.copy();
@@ -162,61 +170,50 @@ public class Player implements cc2.sim.Player {
 	return new Point(maxI - minI + 1, maxJ - minJ + 1);
     }
 
-    public ArrayList<Move> find_possible_moves(gameState state) {
+    public List<Move> find_possible_moves(gameState state) {
 	Dough dough = state.board;
-	ArrayList <Move> moves = new ArrayList <Move> ();
 	Shape[] search_space;
 	if (state.our_turn) {
 	    search_space = state.shapes;
 	}
 	else {
-	    search_space = state.opponent_shapes;
+		search_space = state.opponent_shapes;
 	}
-	for (int i = 0 ; i != SIDE ; ++i) {
-	    for (int j = 0 ; j != SIDE ; ++j) {
-		Point p = new Point(i, j);
-		for (int si = 0 ; si <= 2 ; ++si) {
-		    if (search_space[si] == null) continue;
-		    Shape[] rotations = search_space[si].rotations();
-		    for (int ri = 0 ; ri != rotations.length ; ++ri) {
-			Shape s = rotations[ri];
-			if (dough.cuts(s,p)) {
-			    moves.add(new Move(si, ri, p));
-			}
-		    }
-		}
-	    }
-	}
-	return moves;
+	return find_all_cuts(dough, search_space).stream().map(x -> x.move).collect(Collectors.toList());
+
     }
     
     // function that will be called multiple times in real_cut with different parameters. set searchDough to opponent for behavior from last submission
-    public Move find_cut(Dough dough, Dough searchDough, Shape[] shapes, Shape[] opponent_shapes, int maxCutterIndex) { 
-	ArrayList <ComparableMove> moves = new ArrayList <ComparableMove> ();
-	for (int i = 0 ; i != searchDough.side() ; ++i)
-	    for (int j = 0 ; j != searchDough.side() ; ++j) {
-		Point p = new Point(i, j);
-		for (int si = 0 ; si <= maxCutterIndex ; ++si) {
-		    if (shapes[si] == null) continue;
-		    Shape[] rotations = shapes[si].rotations();
-		    for (int ri = 0 ; ri != rotations.length ; ++ri) {
-			Shape s = rotations[ri];
-			if (dough.cuts(s,p) && searchDough.cuts(s,p)) {
-			    moves.add(new ComparableMove(new Move(si, ri, p), touched_edges(s,p,searchDough), s.size()));
-			}
-		    }
+    public Move find_cut(Dough dough, Dough searchDough, Shape[] shapes, Shape[] opponent_shapes, int maxCutterIndex) {
+		List<ComparableMove> moves = find_all_cuts(searchDough, shapes);
+		if (moves.size() >= 1) {
+			Collections.sort(moves);
+			//System.out.println(moves.get(moves.size() - 1).key);
+			return moves.get(moves.size() - 1).move;
+		} else {
+	    	return null;
 		}
-	    }
-	if (moves.size() >= 1) {
-	    Collections.sort(moves);
-	    //System.out.println(moves.get(moves.size() - 1).key);
-	    return moves.get(moves.size() - 1).move;
-	}
-	else {
-	    return null;
-	}
     }
-    
+
+	private List<ComparableMove> find_all_cuts(Dough dough, Shape[] shapes) {
+		ArrayList <ComparableMove> moves = new ArrayList<> ();
+		for (int i = 0 ; i != dough.side() ; ++i)
+			for (int j = 0 ; j != dough.side() ; ++j) {
+				Point p = new Point(i, j);
+				for (int si = 0 ; si <= shapes.length ; ++si) {
+					if (shapes[si] == null) continue;
+					Shape[] rotations = shapes[si].rotations();
+					for (int ri = 0 ; ri != rotations.length ; ++ri) {
+						Shape s = rotations[ri];
+						if (dough.cuts(s,p)) {
+							moves.add(new ComparableMove(new Move(si, ri, p), touched_edges(s,p,dough), s.size()));
+						}
+					}
+				}
+			}
+		return moves;
+	}
+
     // computes the cut to be made
     public Move real_cut(Dough dough, Shape[] shapes, Shape[] opponent_shapes) {
 	// prune larger shapes if initial move	
