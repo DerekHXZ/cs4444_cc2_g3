@@ -223,20 +223,24 @@ public class Player implements cc2.sim.Player {
 	else {
 	    search_space = state.opponent_shapes;
 	}
-	for (int i = 0 ; i != SIDE ; ++i) {
-	    for (int j = 0 ; j != SIDE ; ++j) {
-		Point p = new Point(i, j);
-		for (int si = 0 ; si <= maxCutterIndex ; ++si) {
-		    if (search_space[si] == null) continue;
-		    Shape[] rotations = search_space[si].rotations();
-		    for (int ri = 0 ; ri != rotations.length ; ++ri) {
-			Shape s = rotations[ri];
-			if (dough.cuts(s,p)) {
-			    moves.add(new Move(si, ri, p));
+	while (moves.isEmpty() ) {	
+	    for (int i = 0 ; i != SIDE ; ++i) {
+		for (int j = 0 ; j != SIDE ; ++j) {
+		    Point p = new Point(i, j);
+		    for (int si = 0 ; si <= maxCutterIndex ; ++si) {
+			if (search_space[si] == null) continue;
+			Shape[] rotations = search_space[si].rotations();
+			for (int ri = 0 ; ri != rotations.length ; ++ri) {
+			    Shape s = rotations[ri];
+			    if (dough.cuts(s,p)) {
+				moves.add(new Move(si, ri, p));
+			    }
 			}
 		    }
 		}
 	    }
+	    if (maxCutterIndex == 2) {break;}
+	    maxCutterIndex++;	    
 	}
 	return moves;
     }
@@ -327,7 +331,10 @@ public class Player implements cc2.sim.Player {
 		else { 
 		    gameState state = new gameState(dough, true, shapes, opponent_shapes);
 		    gameState opt_state = minimax(state,minimax_search_depth,minimax_cutter_index);
-		    System.out.println("Move D");		    
+		    System.out.println("Move D");
+		    /*		    if (opt_state.move_history.size() == 0) {
+			opt_state = minimax(state, 1, 2);
+			}*/
 		    Move D = opt_state.move_history.get(0);
 		    return D;
 		}		
