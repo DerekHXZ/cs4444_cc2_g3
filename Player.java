@@ -166,7 +166,7 @@ public class Player implements cc2.sim.Player {
 	while (!gameTree.isEmpty()) {
 	    gameState state = gameTree.pop();
 	    ArrayList<Move> moves = find_possible_moves(state, maxCutterIndex);
-	    if (moves.size() < 100) {
+	    if (moves.size() < 200) {
 		increase_minimax_pieces();
 	    }
 	    if (moves.size() < 20) {
