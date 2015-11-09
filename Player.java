@@ -106,25 +106,71 @@ public class Player implements cc2.sim.Player {
     }
 
     private int getScore(gameState state) {
-	return find_possible_moves(state, true).size() - find_possible_moves(state, false).size();
+	int score = 0;
+	// our possible moves
+	for (int i = 0 ; i != SIDE ; ++i) {
+	    for (int j = 0 ; j != SIDE ; ++j) {
+		Point p = new Point(i, j);
+		for (int si = 0 ; si <= 2 ; ++si) {
+		    if (state.shapes[si] == null) continue;
+		    Shape[] rotations = state.shapes[si].rotations();
+		    for (int ri = 0 ; ri != rotations.length ; ++ri) {
+			Shape s = rotations[ri];
+			if (state.board.cuts(s,p)) {
+			    score += s.size();
+			}
+		    }
+		}
+	    }
+	}
+	// opponent possible moves
+	for (int i = 0 ; i != SIDE ; ++i) {
+	    for (int j = 0 ; j != SIDE ; ++j) {
+		Point p = new Point(i, j);
+		for (int si = 0 ; si <= 2 ; ++si) {
+		    if (state.opponent_shapes[si] == null) continue;
+		    Shape[] rotations = state.opponent_shapes[si].rotations();
+		    for (int ri = 0 ; ri != rotations.length ; ++ri) {
+			Shape s = rotations[ri];
+			if (state.board.cuts(s,p)) {
+			    score -= s.size();
+			}
+		    }
+		}
+	    }
+	}	
+	// move history
+	for (int i=0; i<state.move_history.size(); i++) {
+	    score += state.shapes[state.move_history.get(i).shape].size() * Math.pow(-1,i);
+	}
+	return score;
     }
 
-    private void increase_minimax_power() {
+    private void increase_minimax_pieces() {
 	if (minimax_cutter_index < 2) {
 	    minimax_cutter_index++;
 	}
     }
+
+    private void increase_minimax_depth() {
+	if (minimax_search_depth < 2) {
+	    minimax_search_depth++;
+	}
+    }
     
     private gameState minimax(gameState initial_state, int searchDepth, int maxCutterIndex) {
-	int bestScore = Integer.MIN_VALUE;
+	int bestScore = Integer.MIN_VALUE;       
 	gameState bestStrategy = initial_state.copy();
 	Stack<gameState> gameTree = new Stack<gameState>();
 	gameTree.push(initial_state);
 	while (!gameTree.isEmpty()) {
 	    gameState state = gameTree.pop();
 	    ArrayList<Move> moves = find_possible_moves(state, maxCutterIndex);
-	    if (moves.size() < 50) {
-		increase_minimax_power();
+	    if (moves.size() < 100) {
+		increase_minimax_pieces();
+	    }
+	    if (moves.size() < 20) {
+		increase_minimax_depth();
 	    }
 	    Iterator<Move> it = moves.iterator();
 	    while (it.hasNext()) {
