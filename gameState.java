@@ -27,7 +27,15 @@ public class gameState {
     }
 
     public gameState copy() {
-	gameState output = new gameState(this.board, this.our_turn, this.shapes, this.opponent_shapes);
+	Dough board_copy = new Dough(board.side());
+	for (int i=0; i<board_copy.side(); i++) {
+	    for (int j=0; j<board_copy.side(); j++) {
+		if (!board.uncut(i,j)) {
+		    board_copy.cut(new Shape(new Point[]{new Point(0,0)}), new Point(i,j));
+		}
+	    }
+	}
+	gameState output = new gameState(board_copy, this.our_turn, this.shapes, this.opponent_shapes);
 	output.turns_played = this.turns_played;
 	output.move_history = new ArrayList<Move>();
 	for (int i=0; i<this.move_history.size(); i++) {
