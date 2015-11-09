@@ -141,7 +141,7 @@ public class Player implements cc2.sim.Player {
 	}	
 	// move history
 	for (int i=0; i<state.move_history.size(); i++) {
-	    score += state.shapes[state.move_history.get(i).shape].size() * Math.pow(-1,i);
+	    score += 2*state.shapes[state.move_history.get(i).shape].size() * Math.pow(-1,i);
 	}
 	return score;
     }
@@ -223,9 +223,13 @@ public class Player implements cc2.sim.Player {
 	else {
 	    search_space = state.opponent_shapes;
 	}
+	int bound = SIDE;
+	if (dough.uncut()) {
+	    bound = 15;
+	}
 	while (moves.isEmpty() ) {	
-	    for (int i = 0 ; i != SIDE ; ++i) {
-		for (int j = 0 ; j != SIDE ; ++j) {
+	    for (int i = 0 ; i != bound ; ++i) {
+		for (int j = 0 ; j != bound ; ++j) {
 		    Point p = new Point(i, j);
 		    for (int si = 0 ; si <= maxCutterIndex ; ++si) {
 			if (search_space[si] == null) continue;
