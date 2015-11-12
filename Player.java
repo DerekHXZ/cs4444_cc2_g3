@@ -152,7 +152,7 @@ public class Player implements cc2.sim.Player {
 		return ret;
 	}
 
-
+    // now defunct use gameState.score instead
     private int getScore(gameState state) {
 	int score = 0;
 	// our possible moves
@@ -220,7 +220,6 @@ public class Player implements cc2.sim.Player {
 	    while (it.hasNext()) {
 		gameState next_state = state.play(it.next());
 		if (next_state.score > bestScore) {
-		    System.out.println(next_state.score);
 		    bestScore = next_state.score;
 		    bestStrategy = next_state;
 		}
@@ -324,7 +323,6 @@ public class Player implements cc2.sim.Player {
 	    }
 	if (moves.size() >= 1) {
 	    Collections.sort(moves);
-	    //System.out.println(moves.get(moves.size() - 1).key);
 	    return moves.get(moves.size() - 1).move;
 	}
 	else {
