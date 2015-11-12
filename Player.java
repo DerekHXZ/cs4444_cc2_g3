@@ -205,7 +205,8 @@ public class Player implements cc2.sim.Player {
     }
     
     private gameState minimax(gameState initial_state, int searchDepth, int maxCutterIndex) {
-	int bestScore = Integer.MIN_VALUE;       
+	initial_state.computeCuttable();
+	int bestScore = Integer.MIN_VALUE;
 	gameState bestStrategy = initial_state.copy();
 	Stack<gameState> gameTree = new Stack<gameState>();
 	gameTree.push(initial_state);
@@ -215,25 +216,16 @@ public class Player implements cc2.sim.Player {
 	    if (moves.size() < switch_threshold && maxCutterIndex != 2) {
 		increase_minimax_pieces();
 	    }
-	    else if (moves.size() < 10 && maxCutterIndex == 2) {
-		set_minimax_depth(4);
-	    }
-	    else if (moves.size() < 25 && maxCutterIndex == 2) {
-		set_minimax_depth(2);
-	    }
 	    Iterator<Move> it = moves.iterator();
 	    while (it.hasNext()) {
-		gameState next_state = state.copy();
-		next_state.play(it.next());
-		int next_score = getScore(next_state);
-		if (next_score > bestScore) {
-		    if (next_state.turns_played < searchDepth) {
-			gameTree.push(next_state);
-		    }
-		    else {
-			bestScore = next_score;
-			bestStrategy = next_state;
-		    }
+		gameState next_state = state.play(it.next());
+		if (next_state.score > bestScore) {
+		    System.out.println(next_state.score);
+		    bestScore = next_state.score;
+		    bestStrategy = next_state;
+		}
+		if (next_state.turns_played < searchDepth) {
+		    gameTree.push(next_state);
 		}
 	    }
 	}
@@ -366,39 +358,17 @@ public class Player implements cc2.sim.Player {
 		return B;
 	    }
 	    else {
-		/*Dough Board1 = createPaddedBoard(dough, minWidth / 2 - 1, 1, minWidth); // pad only one direction by minwidth / 2
-		Dough Board2 = createPaddedBoard(dough, 1, minWidth / 2 - 1, minWidth);
-		Move C1 = find_cut(dough, Board1, shapes, opponent_shapes, 0);
-		Move C2 = find_cut(dough, Board2, shapes, opponent_shapes, 0);
-		if (C1 == null ^ C2 == null) {
-		    if (C1 == null) {
-			System.out.println("Move C");
-			return C2;
-		    }
-		    else {
-			System.out.println("Move C");
-			return C1;
-		    }
+		gameState state = new gameState(dough, true, shapes, opponent_shapes);
+		gameState opt_state = minimax(state, minimax_search_depth, minimax_cutter_index);
+
+		if (opt_state.move_history.size() == 0) {
+		    System.out.println("Move F");
+		    return random_move(state);
 		}
-		else if (C1 != null && C2 != null) { // choose best direction
-		    System.out.println("Move C");
-		    if (touched_edges( shapes[C1.shape].rotations()[C1.rotation], C1.point, Board1) > touched_edges( shapes[C2.shape].rotations()[C2.rotation], C2.point, Board2) ) {
-			return C1;
-		    }
-		    else {
-			return C2;
-		    }
-		}*/
-		//else { 
-		    gameState state = new gameState(dough, true, shapes, opponent_shapes);
-		    gameState opt_state = minimax(state, minimax_search_depth, minimax_cutter_index);
-		    System.out.println("Move D");
-		    if (opt_state.move_history.size() == 0) {
-			return random_move(state);
-		    }
-		    Move D = opt_state.move_history.get(0);
-		    return D;
-		    //}		
+		System.out.println("Move D");		
+		Move D = opt_state.move_history.get(0);
+		return D;
+		//}		
 	    }
 	}
     }
