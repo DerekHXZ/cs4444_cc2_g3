@@ -42,6 +42,14 @@ public class gameState {
 	    }
 	}
 	gameState output = new gameState(board_copy, this.our_turn, this.shapes, this.opponent_shapes);
+	output.cuttable = new int[board.side()][board.side()];
+	output.opponent_cuttable = new int[board.side()][board.side()];
+	for (int i=0; i<board.side(); i++) {
+	    for (int j=0; j<board.side(); j++) {
+		output.cuttable[i][j] = this.cuttable[i][j];
+		output.opponent_cuttable[i][j] = this.opponent_cuttable[i][j];
+	    }
+	}
 	output.turns_played = this.turns_played;
 	output.move_history = new ArrayList<Move>();
 	for (int i=0; i<this.move_history.size(); i++) {
@@ -57,8 +65,18 @@ public class gameState {
     }
 
     public void computeCuttable() {
-	for (int i = 0 ; i != board.side() ; ++i) {
-	    for (int j = 0; j != board.side() ; ++j) {
+	computeCuttable(0,board.side(),0,board.side());
+    }
+    
+    public void computeCuttable(int istart, int iend, int jstart, int jend) {
+	for (int i=istart; i<iend; i++) {
+	    for (int j=jstart; j<jend; j++) {
+		cuttable[i][j] = 0;
+		opponent_cuttable[i][j] = 0;
+	    }
+	}
+	for (int i = istart ; i < iend ; ++i) {
+	    for (int j = jstart; j < jend ; ++j) {
 		Point p = new Point(i, j);
 		for (int si = 0 ; si <= 2 ; ++si) {
 		    if (shapes[si] == null) continue;
@@ -78,8 +96,8 @@ public class gameState {
 		}
 	    }
 	}
-	for (int i = 0 ; i != board.side() ; ++i) {
-	    for (int j = 0; j != board.side() ; ++j) {
+	for (int i = istart ; i < iend ; ++i) {
+	    for (int j = jstart; j < jend ; ++j) {
 		Point p = new Point(i, j);
 		for (int si = 0 ; si <= 2 ; ++si) {
 		    if (opponent_shapes[si] == null) continue;
@@ -114,7 +132,7 @@ public class gameState {
 	gameState output = this.copy();
 	Shape s;
 	Point p = move.point;
-	if (our_turn) {	    
+	if (our_turn) {
 	    output.board.cut(shapes[move.shape].rotations()[move.rotation], move.point);
 	    s = shapes[move.shape].rotations()[move.rotation];
 	}
@@ -124,7 +142,8 @@ public class gameState {
 	}
 	output.move_history.add(move);	
 	output.nextTurn();
-	output.computeCuttable();
+	output.computeCuttable(Math.max(p.i - 11,0), Math.min(p.i + 22,board.side()-1), Math.max(p.j - 11,0), Math.min(p.j + 22,board.side()-1));
+	//output.computeCuttable();
 
 	Iterator<Point> it = s.iterator();
 	while (it.hasNext()) {

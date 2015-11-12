@@ -23,7 +23,8 @@ public class Player implements cc2.sim.Player {
    
     private int minimax_cutter_index;
     private int minimax_search_depth;
-    private int switch_threshold;
+    private int switch_cutter_threshold;
+    private int switch_depth_threshold;
 
     public Player() {
 	opponent = new Dough(SIDE);
@@ -31,7 +32,7 @@ public class Player implements cc2.sim.Player {
 	denied = false;
 	minimax_cutter_index = 0;
 	minimax_search_depth = 1;
-	switch_threshold = 2;
+	switch_cutter_threshold = 10; // only if against another line team
     }    
 
     public Shape cutter(int length, Shape[] shapes, Shape[] opponent_shapes)
@@ -210,20 +211,24 @@ public class Player implements cc2.sim.Player {
 	gameState bestStrategy = initial_state.copy();
 	Stack<gameState> gameTree = new Stack<gameState>();
 	gameTree.push(initial_state);
+
 	while (!gameTree.isEmpty()) {
 	    gameState state = gameTree.pop();
 	    ArrayList<Move> moves = find_possible_moves(state, maxCutterIndex);
-	    if (moves.size() < switch_threshold && maxCutterIndex != 2) {
+	    if (moves.size() < switch_cutter_threshold && maxCutterIndex != 2) {
 		increase_minimax_pieces();
 	    }
+	    /*if (moves.size() < switch_depth_threshold && maxCutterIndex == 2) {
+		set_minimax_depth(2);
+		}*/
 	    Iterator<Move> it = moves.iterator();
 	    while (it.hasNext()) {
 		gameState next_state = state.play(it.next());
-		if (next_state.score > bestScore) {
+		if (next_state.score > bestScore && next_state.turns_played == searchDepth) {
 		    bestScore = next_state.score;
 		    bestStrategy = next_state;
 		}
-		if (next_state.turns_played < searchDepth) {
+		else if (next_state.turns_played < searchDepth) {
 		    gameTree.push(next_state);
 		}
 	    }
@@ -351,14 +356,14 @@ public class Player implements cc2.sim.Player {
 	else {
 	    Move B = find_cut(dough, createPaddedBoard(dough, minWidth / 2 - 1, minWidth / 2 - 1, getMinWidth(opponent_shapes[1]) / 2 - 1), shapes, opponent_shapes, 0); // pad all directions with minwidth / 2
 	    if (B != null && minWidth / 2 - 1 > 0) {
+		switch_cutter_threshold = 200;
 		System.out.println("Move B");
-		switch_threshold = 200;
 		return B;
 	    }
 	    else {
 		gameState state = new gameState(dough, true, shapes, opponent_shapes);
 		gameState opt_state = minimax(state, minimax_search_depth, minimax_cutter_index);
-
+		
 		if (opt_state.move_history.size() == 0) {
 		    System.out.println("Move F");
 		    return random_move(state);
@@ -366,8 +371,8 @@ public class Player implements cc2.sim.Player {
 		System.out.println("Move D");		
 		Move D = opt_state.move_history.get(0);
 		return D;
-		//}		
-	    }
+	    }		
+	    //	    }
 	}
     }
     
