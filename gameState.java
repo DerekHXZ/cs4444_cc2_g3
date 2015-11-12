@@ -131,9 +131,8 @@ public class gameState {
 	    Point q = it.next();
 	    int i = q.i + p.i;
 	    int j = q.j + p.j;
-	    //System.out.println(opponent_cuttable[i][j] + ", " + output.opponent_cuttable[i][j]);
-	    //output.cuttable[i][j] = this.cuttable[i][j];
-	    //output.opponent_cuttable[i][j] = this.opponent_cuttable[i][j];
+	    output.cuttable[i][j] = this.cuttable[i][j];
+	    //tput.opponent_cuttable[i][j] = this.opponent_cuttable[i][j];
 	}
 
 	int deltaScore = 0;
