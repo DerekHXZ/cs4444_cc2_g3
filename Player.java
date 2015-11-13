@@ -203,8 +203,9 @@ public class Player implements cc2.sim.Player {
 	    ArrayList<Move> moves = find_possible_moves(state, maxCutterIndex);
 	    if (moves.size() < switch_cutter_threshold && maxCutterIndex != 2) {
 		increase_minimax_pieces();
+		set_minimax_depth(1);
 	    }
-	    if (moves.size() < switch_depth_threshold && maxCutterIndex == 2) {
+	    else if (moves.size() < switch_depth_threshold) { // when already using all pieces, or when playing vs line (where switch_cutter_threshold = 10)
 		set_minimax_depth(2);
 	    }
 	    Iterator<Move> it = moves.iterator();
@@ -356,8 +357,8 @@ public class Player implements cc2.sim.Player {
 		    shapes[s] = null;
 	}
 	int minWidth = getMinWidth(opponent_shapes[0]);
-	if (minWidth < 2) {
-	    switch_cutter_threshold = 200;
+	if (minWidth > 2) {
+	    switch_cutter_threshold = 100;
 	}
 	Move A = find_cut(dough, createPaddedBoard(dough, minWidth-1, minWidth-1, minWidth-1), shapes, opponent_shapes, 0); // pad all directions with minwidth
 	if (A != null && !use_minimax) {

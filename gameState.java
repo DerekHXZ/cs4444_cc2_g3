@@ -42,14 +42,14 @@ public class gameState {
 	    }
 	}
 	gameState output = new gameState(board_copy, this.our_turn, this.shapes, this.opponent_shapes);
-	output.cuttable = new int[board.side()][board.side()];
+	/*output.cuttable = new int[board.side()][board.side()];
 	output.opponent_cuttable = new int[board.side()][board.side()];
 	for (int i=0; i<board.side(); i++) {
 	    for (int j=0; j<board.side(); j++) {
 		output.cuttable[i][j] = this.cuttable[i][j];
 		output.opponent_cuttable[i][j] = this.opponent_cuttable[i][j];
 	    }
-	}
+	}*/
 	output.turns_played = this.turns_played;
 	output.move_history = new ArrayList<Move>();
 	for (int i=0; i<this.move_history.size(); i++) {
