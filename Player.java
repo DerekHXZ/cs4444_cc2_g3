@@ -358,7 +358,7 @@ public class Player implements cc2.sim.Player {
 	}
 	int minWidth = getMinWidth(opponent_shapes[0]);
 	if (minWidth > 2) {
-	    switch_cutter_threshold = 100;
+	    switch_cutter_threshold = 200;
 	}
 	Move A = find_cut(dough, createPaddedBoard(dough, minWidth-1, minWidth-1, minWidth-1), shapes, opponent_shapes, 0); // pad all directions with minwidth
 	if (A != null && !use_minimax) {
