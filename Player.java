@@ -31,13 +31,13 @@ public class Player implements cc2.sim.Player {
     public Player() {
 	opponent = new Dough(SIDE);
 	self = new Dough(SIDE);
-	denied = false;
-	minimax_cutter_index = 0;
-	minimax_search_depth = 1; // 2 is very slow
-	switch_depth_threshold = 0;
-	switch_strategy_threshold = 1000;
-	switch_cutter_threshold = 10; // only if against another line team
-	use_minimax = false;
+	denied = false; // if opponent's 11 piece has a nice fitting companion, whether we've denied them that piece
+	minimax_cutter_index = 0; // only start off searching through 11-piece space
+	minimax_search_depth = 1; // 2 is very slow initially
+	switch_depth_threshold = 0; // don't use depth-2 search, it's not good
+	switch_strategy_threshold = 1000; // only if against another line team. abandon blocking their convex hull prematurely. 
+	switch_cutter_threshold = 10; // only if against another line team. playing smaller pieces to block lines isn't worth it.
+	use_minimax = false; // only used if against another line team
     }    
 
     public Shape cutter(int length, Shape[] shapes, Shape[] opponent_shapes)
@@ -51,7 +51,7 @@ public class Player implements cc2.sim.Player {
 	space.cut(opponent_shapes[0], new Point(0,0));
 	Stack<Point> conn_comp = new Stack<Point>();
 
-	while (!space.saturated()) { 
+	while (!space.saturated()) { // analyze convex hull of opponent's 11-piece and try to block their smaller pieces
 	    Point init = findAvailablePoint(space);
 	    conn_comp.push(init);
 	    ArrayList<Point> points = new ArrayList<Point>(); 
@@ -79,6 +79,7 @@ public class Player implements cc2.sim.Player {
 	return linearCutter(length);
     }
 
+    // find a cuttable point to start a BFS with
     private Point findAvailablePoint(rectDough space) {
 	int h = space.height;
 	int w = space.width;
@@ -110,6 +111,7 @@ public class Player implements cc2.sim.Player {
 		return new Shape(points);
 	}
 
+    // default cutter generation
     public Shape randLinearCutter(int length, Shape[] shapes, Shape[] opponent_shapes) {
 	// check if first try of given cutter length
 	Point[] cutter = new Point [length];
@@ -188,7 +190,8 @@ public class Player implements cc2.sim.Player {
     private void set_minimax_depth(int depth) {
 	minimax_search_depth = depth;
     }
-    
+
+    // minimax or greedy search (depth 2 or depth 1)
     private gameState minimax(gameState initial_state, int searchDepth, int maxCutterIndex) {
 	initial_state.computeCuttable();
 	int bestScore = Integer.MIN_VALUE;
@@ -208,13 +211,13 @@ public class Player implements cc2.sim.Player {
 	    }
 	    Iterator<Move> it = moves.iterator();
 
-	    if (state.turns_played == 0) {
+	    if (state.turns_played == 0) { //play all our possible moves
 		while (it.hasNext()) {		
 		    gameState next_state = state.play(it.next());
 		    gameTree.push(next_state);
 		}
 	    }
-	    else if (state.turns_played == 1 && searchDepth == 2) { //depth 2 alpha-beta pruning
+	    else if (state.turns_played == 1 && searchDepth == 2) { //depth 2 minimax with alpha-beta pruning
 		int branchScore = Integer.MAX_VALUE;
 		while (it.hasNext() && branchScore > bestScore) {
 		    gameState next_state = state.play(it.next());
@@ -245,6 +248,7 @@ public class Player implements cc2.sim.Player {
 	return Math.min( b.i,b.j );
     }
 
+    // get convex hull of opponent's 11 piece
     private Point getBoundingBox(Shape cutter) {
 	int minI = Integer.MAX_VALUE;
 	int minJ = Integer.MAX_VALUE;

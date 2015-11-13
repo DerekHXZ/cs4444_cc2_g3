@@ -32,6 +32,7 @@ public class gameState {
 	this.opponent_cuttable = new int[board.side()][board.side()];
     }
 
+    // make a new gameState to be used in minimax search recursively
     public gameState copy() {
 	Dough board_copy = new Dough(board.side());
 	for (int i=0; i<board_copy.side(); i++) {
@@ -67,7 +68,8 @@ public class gameState {
     public void computeCuttable() {
 	computeCuttable(0,board.side(),0,board.side());
     }
-    
+
+    // score the board by determining the max cutter size that can claim a point on the grid
     public void computeCuttable(int istart, int iend, int jstart, int jend) {
 	for (int i=istart; i<iend; i++) {
 	    for (int j=jstart; j<jend; j++) {
@@ -146,7 +148,7 @@ public class gameState {
 	output.computeCuttable();
 
 	Iterator<Point> it = s.iterator();
-	while (it.hasNext()) {
+	while (it.hasNext()) { // don't consider the active move as blocking the active player
 	    Point q = it.next();
 	    int i = q.i + p.i;
 	    int j = q.j + p.j;
@@ -158,6 +160,7 @@ public class gameState {
 	    }
 	}
 
+	// subtract scores of the two boards before/after playing to compute the change in score
 	int deltaScore = 0;
 	for (int i=0; i<board.side(); i++) {
 	    for (int j=0; j<board.side(); j++) {
