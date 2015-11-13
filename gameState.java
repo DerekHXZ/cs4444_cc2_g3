@@ -142,8 +142,8 @@ public class gameState {
 	}
 	output.move_history.add(move);	
 	output.nextTurn();
-	output.computeCuttable(Math.max(p.i - 11,0), Math.min(p.i + 22,board.side()-1), Math.max(p.j - 11,0), Math.min(p.j + 22,board.side()-1));
-	//output.computeCuttable();
+	//output.computeCuttable(Math.max(p.i - 11,0), Math.min(p.i + 22,board.side()-1), Math.max(p.j - 11,0), Math.min(p.j + 22,board.side()-1));
+	output.computeCuttable();
 
 	Iterator<Point> it = s.iterator();
 	while (it.hasNext()) {

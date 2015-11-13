@@ -25,15 +25,19 @@ public class Player implements cc2.sim.Player {
     private int minimax_search_depth;
     private int switch_cutter_threshold;
     private int switch_depth_threshold;
+    private int switch_strategy_threshold;
+    private boolean use_minimax;
 
     public Player() {
 	opponent = new Dough(SIDE);
 	self = new Dough(SIDE);
 	denied = false;
 	minimax_cutter_index = 0;
-	minimax_search_depth = 1; // don't change this
+	minimax_search_depth = 1; // 2 is very slow
 	switch_depth_threshold = 50;
+	switch_strategy_threshold = 600;
 	switch_cutter_threshold = 10; // only if against another line team
+	use_minimax = false;
     }    
 
     public Shape cutter(int length, Shape[] shapes, Shape[] opponent_shapes)
@@ -93,7 +97,7 @@ public class Player implements cc2.sim.Player {
 		cutter[i] = new Point(i, 0);
 	} else {
 	    // pick a random cell from 2nd row but not same
-	    int i;
+	    int i = 0;
 	    int n = cutter.length-1;
 	    do {
 		i = gen.nextInt(n*10000); //bias towards endpoints
@@ -304,6 +308,9 @@ public class Player implements cc2.sim.Player {
 		    }
 		}
 	    }
+	if (moves.size() < switch_strategy_threshold && getMinWidth(opponent_shapes[0]) <= 2) {
+	    use_minimax = true;
+	}
 	if (moves.size() >= 1) {
 	    Collections.sort(moves);
 	    return moves.get(moves.size() - 1).move;
@@ -325,16 +332,18 @@ public class Player implements cc2.sim.Player {
 		if (shapes[s].size() != min)
 		    shapes[s] = null;
 	}
-	int minWidth = getMinWidth(opponent_shapes[0]);	
+	int minWidth = getMinWidth(opponent_shapes[0]);
+	if (minWidth < 2) {
+	    switch_cutter_threshold = 200;
+	}
 	Move A = find_cut(dough, createPaddedBoard(dough, minWidth-1, minWidth-1, minWidth-1), shapes, opponent_shapes, 0); // pad all directions with minwidth
-	if (A != null) {
+	if (A != null && !use_minimax) {
 	    System.out.println("Move A");
 	    return A;
 	}
 	else {
 	    Move B = find_cut(dough, createPaddedBoard(dough, minWidth / 2 - 1, minWidth / 2 - 1, getMinWidth(opponent_shapes[1]) / 2 - 1), shapes, opponent_shapes, 0); // pad all directions with minwidth / 2
-	    if (B != null && minWidth / 2 - 1 > 0) {
-		switch_cutter_threshold = 200;
+	    if (B != null && minWidth / 2 - 1 > 0 && !use_minimax) {
 		System.out.println("Move B");
 		return B;
 	    }
@@ -350,7 +359,6 @@ public class Player implements cc2.sim.Player {
 		Move D = opt_state.move_history.get(0);
 		return D;
 	    }		
-	    //	    }
 	}
     }
     
