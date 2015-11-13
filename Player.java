@@ -315,7 +315,7 @@ public class Player implements cc2.sim.Player {
     // function that will be called multiple times in real_cut with different parameters. set searchDough to opponent for behavior from last submission
     public Move find_cut(Dough dough, Dough searchDough, Shape[] shapes, Shape[] opponent_shapes, int maxCutterIndex) { 
 	ArrayList <ComparableMove> moves = new ArrayList <ComparableMove> ();
-		int[][] scoreBoard = getScoreBoard(dough, shapes, opponent_shapes);
+	int[][] scoreBoard = getScoreBoard(dough, shapes, opponent_shapes);
 	for (int i = 0 ; i != searchDough.side() ; ++i)
 	    for (int j = 0 ; j != searchDough.side() ; ++j) {
 		Point p = new Point(i, j);
@@ -325,14 +325,14 @@ public class Player implements cc2.sim.Player {
 		    for (int ri = 0 ; ri != rotations.length ; ++ri) {
 			Shape s = rotations[ri];
 			if (dough.cuts(s,p) && searchDough.cuts(s,p)) {
-				Move m = new Move(si, ri, p);
-				moves.add(new ComparableMove(m, getScoreOfMove(scoreBoard, shapes, m),touched_edges(s,p,searchDough)));
+			    Move m = new Move(si, ri, p);
+			    moves.add(new ComparableMove(m, getScoreOfMove(scoreBoard, shapes, m),touched_edges(s,p,searchDough)));
 			    // moves.add(new ComparableMove(new Move(si, ri, p), touched_edges(s,p,searchDough), s.size()));
 			}
 		    }
 		}
 	    }
-	if (moves.size() < switch_strategy_threshold && getMinWidth(opponent_shapes[0]) <= 2) {
+	if (moves.size() != 0 && moves.size() < switch_strategy_threshold && getMinWidth(opponent_shapes[0]) <= 2) {
 	    use_minimax = true;
 	}
 	if (moves.size() >= 1) {
