@@ -92,6 +92,7 @@ public class Player implements cc2.sim.Player {
     }
 
 	HashMap<Integer, Integer> shape_tries = new HashMap<>();
+	// Returns for any size a stick the first time, and then a hockey shape moving the extra piece in gradually.
 	public Shape linearCutter(int length) {
 		Point[] points = new Point[length];
 		for (int i = 0; i < length-1; i++) {
@@ -136,6 +137,8 @@ public class Player implements cc2.sim.Player {
 	return new Shape(cutter);
     }
 
+	// Getting the board for greedy. The number on each grid is number of opponent move on it minus
+	// number of own move on it.
 	private int[][] getScoreBoard(Dough d, Shape[] shapes, Shape[] opponent_shapes) {
 		int[][] score = new int[d.side()][d.side()];
 		for (int i = 0 ; i != SIDE ; ++i) {
@@ -170,6 +173,7 @@ public class Player implements cc2.sim.Player {
 		return score;
 	}
 
+	// Score of a move. It is sum of all the number on the score. Larger means obstructing more opponent moves.
 	private int getScoreOfMove(int[][] scoreBoard, Shape[] shapes, Move m) {
 		Shape s = shapes[m.shape].rotations()[m.rotation];
 		Point p = m.point;
