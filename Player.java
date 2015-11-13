@@ -31,7 +31,8 @@ public class Player implements cc2.sim.Player {
 	self = new Dough(SIDE);
 	denied = false;
 	minimax_cutter_index = 0;
-	minimax_search_depth = 1;
+	minimax_search_depth = 1; // don't change this
+	switch_depth_threshold = 50;
 	switch_cutter_threshold = 10; // only if against another line team
     }    
 
@@ -153,48 +154,6 @@ public class Player implements cc2.sim.Player {
 		return ret;
 	}
 
-    // now defunct use gameState.score instead
-    private int getScore(gameState state) {
-	int score = 0;
-	// our possible moves
-	for (int i = 0 ; i != SIDE ; ++i) {
-	    for (int j = 0 ; j != SIDE ; ++j) {
-		Point p = new Point(i, j);
-		for (int si = 0 ; si <= 2 ; ++si) {
-		    if (state.shapes[si] == null) continue;
-		    Shape[] rotations = state.shapes[si].rotations();
-		    for (int ri = 0 ; ri != rotations.length ; ++ri) {
-			Shape s = rotations[ri];
-			if (state.board.cuts(s,p)) {
-			    score += s.size();
-			}
-		    }
-		}
-	    }
-	}
-	// opponent possible moves
-	for (int i = 0 ; i != SIDE ; ++i) {
-	    for (int j = 0 ; j != SIDE ; ++j) {
-		Point p = new Point(i, j);
-		for (int si = 0 ; si <= 2 ; ++si) {
-		    if (state.opponent_shapes[si] == null) continue;
-		    Shape[] rotations = state.opponent_shapes[si].rotations();
-		    for (int ri = 0 ; ri != rotations.length ; ++ri) {
-			Shape s = rotations[ri];
-			if (state.board.cuts(s,p)) {
-			    score -= s.size();
-			}
-		    }
-		}
-	    }
-	}	
-	// move history
-	for (int i=0; i<state.move_history.size(); i++) {
-	    score += state.shapes[state.move_history.get(i).shape].size() * Math.pow(-1,i);
-	}
-	return score;
-    }
-
     private void increase_minimax_pieces() {
 	if (minimax_cutter_index < 2) {
 	    minimax_cutter_index++;
@@ -218,19 +177,38 @@ public class Player implements cc2.sim.Player {
 	    if (moves.size() < switch_cutter_threshold && maxCutterIndex != 2) {
 		increase_minimax_pieces();
 	    }
-	    /*if (moves.size() < switch_depth_threshold && maxCutterIndex == 2) {
+	    if (moves.size() < switch_depth_threshold && maxCutterIndex == 2) {
 		set_minimax_depth(2);
-		}*/
+	    }
 	    Iterator<Move> it = moves.iterator();
-	    while (it.hasNext()) {
-		gameState next_state = state.play(it.next());
-		if (next_state.score > bestScore && next_state.turns_played == searchDepth) {
-		    bestScore = next_state.score;
-		    bestStrategy = next_state;
-		}
-		else if (next_state.turns_played < searchDepth) {
+
+	    if (state.turns_played == 0) {
+		while (it.hasNext()) {		
+		    gameState next_state = state.play(it.next());
 		    gameTree.push(next_state);
 		}
+	    }
+	    else if (state.turns_played == 1 && searchDepth == 2) { //depth 2 alpha-beta pruning
+		int branchScore = Integer.MAX_VALUE;
+		while (it.hasNext() && branchScore > bestScore) {
+		    gameState next_state = state.play(it.next());
+		    branchScore = Math.min(branchScore, next_state.score);
+		}
+
+		if (branchScore > bestScore) {
+		    bestScore = branchScore;
+		    bestStrategy = state.copy();
+		}
+	    }
+	    else if (state.turns_played == 1 && searchDepth == 1) { //depth 1 greedy
+		if (state.score > bestScore) {
+		    bestScore = state.score;
+		    bestStrategy = state.copy();
+		}
+	    }
+	    else {
+		System.out.println("Fail");
+		return null;
 	    }
 	}
 	return bestStrategy;
