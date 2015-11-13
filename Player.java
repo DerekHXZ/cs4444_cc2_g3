@@ -42,7 +42,10 @@ public class Player implements cc2.sim.Player {
 
     public Shape cutter(int length, Shape[] shapes, Shape[] opponent_shapes)
     {
-	if (opponent_shapes.length == 0 || getMinWidth(opponent_shapes[0]) <= 2 || denied == true) {return randLinearCutter(length, shapes, opponent_shapes);}
+	if (opponent_shapes.length == 0 || getMinWidth(opponent_shapes[0]) <= 2 || denied == true) {
+		// return randLinearCutter(length, shapes, opponent_shapes);
+		return linearCutter(length);
+	}
 	Point dimensions = getBoundingBox(opponent_shapes[0]);
 	rectDough space = new rectDough(dimensions);
 	space.cut(opponent_shapes[0], new Point(0,0));
@@ -72,7 +75,8 @@ public class Player implements cc2.sim.Player {
 		return new Shape(points.toArray(cutter));
 	    }
 	}
-	return randLinearCutter(length, shapes, opponent_shapes);
+	// return randLinearCutter(length, shapes, opponent_shapes);
+	return linearCutter(length);
     }
 
     private Point findAvailablePoint(rectDough space) {
@@ -86,6 +90,25 @@ public class Player implements cc2.sim.Player {
 	System.out.println("No available points");
 	return null;
     }
+
+	HashMap<Integer, Integer> shape_tries = new HashMap<>();
+	public Shape linearCutter(int length) {
+		Point[] points = new Point[length];
+		for (int i = 0; i < length-1; i++) {
+			points[i] = new Point(i, 0);
+		}
+
+		int tries = shape_tries.getOrDefault(length, 0);
+		if (tries == 0) {
+			points[length-1] = new Point(length-1, 0);
+		} else if (tries % 2 != 0){
+			points[length-1] = new Point(tries/2, 1);
+		} else {
+			points[length-1] = new Point(length-tries/2-1, 1);
+		}
+		shape_tries.put(length, tries + 1);
+		return new Shape(points);
+	}
 
     public Shape randLinearCutter(int length, Shape[] shapes, Shape[] opponent_shapes) {
 	// check if first try of given cutter length
