@@ -185,10 +185,8 @@ public class Player implements cc2.sim.Player {
 		return ret;
 	}
 
-    private void increase_minimax_pieces() {
-	if (minimax_cutter_index < 2) {
-	    minimax_cutter_index++;
-	}
+    private void set_minimax_pieces(int index) {
+	minimax_cutter_index = Math.min(index,2);
     }
 
     private void set_minimax_depth(int depth) {
@@ -206,7 +204,7 @@ public class Player implements cc2.sim.Player {
 	    gameState state = gameTree.pop();
 	    ArrayList<Move> moves = find_possible_moves(state, maxCutterIndex);
 	    if (moves.size() < switch_cutter_threshold && maxCutterIndex != 2) {
-		increase_minimax_pieces();
+		set_minimax_pieces(maxCutterIndex+1);
 		set_minimax_depth(1);
 	    }
 	    else if (moves.size() < switch_depth_threshold) { // when already using all pieces, or when playing vs line (where switch_cutter_threshold = 10)
