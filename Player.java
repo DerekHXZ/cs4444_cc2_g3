@@ -34,8 +34,8 @@ public class Player implements cc2.sim.Player {
 	denied = false;
 	minimax_cutter_index = 0;
 	minimax_search_depth = 1; // 2 is very slow
-	switch_depth_threshold = 50;
-	switch_strategy_threshold = 600;
+	switch_depth_threshold = 0;
+	switch_strategy_threshold = 1000;
 	switch_cutter_threshold = 10; // only if against another line team
 	use_minimax = false;
     }    
