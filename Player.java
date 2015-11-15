@@ -95,21 +95,36 @@ public class Player implements cc2.sim.Player {
 	HashMap<Integer, Integer> shape_tries = new HashMap<>();
 	// Returns for any size a stick the first time, and then a hockey shape moving the extra piece in gradually.
 	public Shape linearCutter(int length) {
-		Point[] points = new Point[length];
-		for (int i = 0; i < length-1; i++) {
-			points[i] = new Point(i, 0);
-		}
+	    Point[] points = new Point[length];
+	    for (int i = 0; i < length-1; i++) {
+		points[i] = new Point(i, 0);
+	    }
 
-		int tries = shape_tries.getOrDefault(length, 0);
-		if (tries == 0) {
-			points[length-1] = new Point(length-1, 0);
-		} else if (tries % 2 != 0){
+	    int tries = shape_tries.getOrDefault(length, 0);
+	    if (tries == 0) {
+		points[length-1] = new Point(length-1, 0);
+		shape_tries.put(length, tries+1);
+	    }
+	    else {
+		if (length == 8 || length == 11) {
+		    if (tries % 2 != 0){
 			points[length-1] = new Point(tries/2, 1);
-		} else {
+		    } else {
 			points[length-1] = new Point(length-tries/2-1, 1);
+		    }
+		    shape_tries.put(length, tries + 1);
 		}
-		shape_tries.put(length, tries + 1);
-		return new Shape(points);
+		else {
+		    if (tries % 2 != 0){
+			points[length-1] = new Point(length-tries/2-2, 1);
+		    } else {
+			points[length-1] = new Point(tries/2, 1);
+		    }
+		    shape_tries.put(length, tries + 1);
+		}			
+	    }
+	    System.out.println(points[length-1].i + ", " +  points[length-1].j);
+	    return new Shape(points);
 	}
 
     // default cutter generation
